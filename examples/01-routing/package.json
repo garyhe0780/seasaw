@@ -1,0 +1,19 @@
+{
+  "name": "01-routing",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --watch index.ts"
+  },
+  "dependencies": {
+    "arktype": "^2.1.15",
+    "seasaw": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "seasaw",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ] 
+}
