@@ -54,6 +54,24 @@ export class Seasaw {
     return this.createRoute("CUSTOM", path, handler, options);
   }
 
+  group(router: Seasaw): this
+  group(path: string, router: Seasaw): this
+  group(pathOrRouter: string | Seasaw, maybeRouter?: Seasaw): this {
+    if (pathOrRouter instanceof Seasaw) {
+      this.routesStack.push(...pathOrRouter.routesStack.map((route) => ({
+        ...route,
+        path: `${pathOrRouter.options.prefix ?? ''}${route.path}`,
+      })));
+    } else if (pathOrRouter && maybeRouter){
+      this.routesStack.push(...maybeRouter.routesStack.map((route) => ({
+        ...route,
+        path: `${pathOrRouter}${maybeRouter.options.prefix ?? ''}${route.path}`,
+      })));
+    }
+
+    return this;
+  }
+
   private createRoute<T = unknown>(method: Method, path: string, handler: Handler, options?: DecideLater & { body?: (data: unknown) => T | type.errors }): this {
     this.routesStack.push({
       path,
@@ -99,7 +117,7 @@ export class Seasaw {
 
           acc[curr.path] = {
             ...acc[curr.path],
-            [curr.method]: async (req: BunRequest) => {
+            [curr.method]: async (req: BunRequest): Promise<Response> => {
               const data = await scope.run(function* () {
                 const result = handler(createContext(req));
                 if (result instanceof Response) {
@@ -109,7 +127,7 @@ export class Seasaw {
                 return result instanceof Promise ? yield* until(result) : yield* result;
               });
 
-              return data;
+              return data as unknown as Promise<Response>;
             }
           }
 
@@ -136,6 +154,4 @@ export class Seasaw {
     }.bind(this));
   }
 }
-
-export { Operation }
 

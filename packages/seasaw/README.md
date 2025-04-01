@@ -1,4 +1,4 @@
-# seesaw
+# seasaw
 A fast, minimalistic and opinionated backend framework for Bun 🎯
 
 ## Quick Start 🚀

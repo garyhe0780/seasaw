@@ -9,7 +9,7 @@ import { badRequest } from "./response";
 export function  validator<T>(
 	schema: (data: unknown) => T | type.errors,
 	handler: Handler<T>,
-): Handler<T> {
+) {
 	return async (context: Context) => {
     const { req } = context;
 		const { data: body, error } = await attempt(() => req.json());

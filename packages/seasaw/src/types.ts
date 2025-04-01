@@ -30,7 +30,7 @@ export interface Context<T = unknown> {
 }
 
 export interface Options {
-  port: number;
+  port?: number;
   prefix?: string;
 }
 

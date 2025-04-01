@@ -1,6 +1,6 @@
 {
   "name": "seasaw",
-  "version": "0.1.7",
+  "version": "0.1.17",
   "author": "Gary He <garyhe.05@gmail.com>",
   "keywords": ["seasaw", "bun", "typescript", "effection", "arktype"],
   "type": "module",
@@ -15,7 +15,7 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target bun",
+    "build": "bun build ./index.ts --outdir ./dist --target bun",
     "types": "tsc --emitDeclarationOnly --outDir dist",
     "prepublish": "bun run build && bun run types"
   },
