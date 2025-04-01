@@ -1,4 +1,4 @@
-# seesaw
+# seasaw
 
 To install dependencies:
 

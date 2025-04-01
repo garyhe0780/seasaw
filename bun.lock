@@ -31,7 +31,7 @@
     },
     "packages/seasaw": {
       "name": "seasaw",
-      "version": "0.0.7",
+      "version": "0.1.17",
       "dependencies": {
         "arktype": "^2.1.15",
         "effection": "^4.0.0-alpha.7",
@@ -43,6 +43,13 @@
         "typescript": "^5.8.2",
       },
     },
+    "packages/seasaw_rate_limit": {
+      "name": "@seasaw/rate-limit",
+      "version": "0.0.1",
+      "peerDependencies": {
+        "seasaw": "workspace:*",
+      },
+    },
   },
   "packages": {
     "00-hello-world": ["00-hello-world@workspace:examples/00-hello-world"],
@@ -52,6 +59,8 @@
     "@ark/schema": ["@ark/schema@0.45.5", "", { "dependencies": { "@ark/util": "0.45.5" } }, "sha512-RW25FuQRcn4Mc33auOkEL1CLuyj86LmI5YGeuhYYrxEQqK23D99m5T+MGBuOSAbECBtQ8VnI4BaC5Hbb7Ly6tQ=="],
 
     "@ark/util": ["@ark/util@0.45.5", "", {}, "sha512-BbuDOKJJYZ2dzZDNhBavkhgGD2hv4/idEhXpEPA5weOlE9/kU7XwAvEWn74tCuySHrD7peDqe2Ct/EDUlM40qg=="],
+
+    "@seasaw/rate-limit": ["@seasaw/rate-limit@workspace:packages/seasaw_rate_limit"],
 
     "@types/bun": ["@types/bun@1.2.8", "", { "dependencies": { "bun-types": "1.2.7" } }, "sha512-t8L1RvJVUghW5V+M/fL3Thbxcs0HwNsXsnTEBEfEVqGteiJToOlZ/fyOEaR1kZsNqnu+3XA4RI/qmnX4w6+S+w=="],
 

@@ -1,8 +1,6 @@
 {
-  "name": "seasaw",
-  "version": "0.1.18",
-  "author": "Gary He <garyhe.05@gmail.com>",
-  "keywords": ["seasaw", "bun", "typescript", "effection", "arktype"],
+  "name": "@seasaw/rate-limit",
+  "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -15,18 +13,11 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "bun build ./index.ts --outdir ./dist --target bun",
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun",
     "types": "tsc --emitDeclarationOnly --outDir dist",
     "prepublish": "bun run build && bun run types"
   },
-  "devDependencies": {
-    "@types/bun": "^1.2.7"
-  },
   "peerDependencies": {
-    "typescript": "^5.8.2"
-  },
-  "dependencies": {
-    "arktype": "^2.1.15",
-    "effection": "^4.0.0-alpha.7"
+    "seasaw": "workspace:*"
   }
 }
