@@ -7,7 +7,6 @@
     "dev": "bun run --watch index.ts"
   },
   "dependencies": {
-    "arktype": "^2.1.15",
     "seasaw": "workspace:*"
   },
   "devDependencies": {

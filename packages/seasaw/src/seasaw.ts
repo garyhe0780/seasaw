@@ -1,157 +1,213 @@
-import { main, spawn, suspend, useScope, type Operation } from "effection";
-import { type Server, type BunRequest } from "bun";
+import type { BunRequest, Server } from "bun";
+import { type Operation, type Scope, main, spawn, suspend, useScope } from "effection";
 
-import type { Context, DecideLater, Handler, Method, Middleware, Options, Route } from "./types";
-import { validator } from "./validator";
+import type { type } from "arktype";
 import { createContext } from "./context";
-import { type } from "arktype";
+import type {
+	Context,
+	DecideLater,
+	Handler,
+	Method,
+	Middleware,
+	Options,
+	Route,
+	Static,
+} from "./types";
 import { until } from "./utils";
+import { validator } from "./validator";
 
 export class Seasaw {
-  options: Options;
-  server: Server | null = null;
-  private middlewareStack: Middleware<Context>[] = [];
-  private routesStack: Route[] = [];
+	options: Options;
+	server: Server | null = null;
+	private staticStack: Static[] = [];
+	private routesStack: Route[] = [];
+	private middlewareStack: Middleware<Context>[] = [];
 
-  constructor(options?: Options) {
-    this.options = {
-      port: 3000,
-      prefix: "",
-      ...options,
-    }
-  }
+	constructor(options?: Options) {
+		this.options = {
+			port: 3000,
+			prefix: "",
+			...options,
+		};
+	}
 
-  use(middleware: Middleware<Context>): this {
-    this.middlewareStack.push(middleware);
-    return this;
-  }
+	static(path: string, response: Response): this {
+		this.staticStack.push({
+			path,
+			response,
+		});
 
-  get(path: string, handler: Handler, options?: DecideLater): this {
-    return this.createRoute("GET", path, handler, options);
-  }
+		return this;
+	}
 
-  post<T = unknown>(
-    path: string,
-    handler: Handler,
-    options?: DecideLater & { body?: (data: unknown) => T | type.errors }
-  ): this {
-    return this.createRoute<T>("POST", path, handler, options);
-  }
+	get(path: string, handler: Handler, options?: DecideLater): this {
+		return this.createRoute("GET", path, handler, options);
+	}
 
-  put(path: string, handler: Handler, options?: DecideLater): this {
-    return this.createRoute("PUT", path, handler, options);
-  }
+	post<T = unknown>(
+		path: string,
+		handler: Handler,
+		options?: DecideLater & { body?: (data: unknown) => T | type.errors },
+	): this {
+		return this.createRoute<T>("POST", path, handler, options);
+	}
 
-  patch(path: string, handler: Handler, options?: DecideLater): this {
-    return this.createRoute("PATCH", path, handler, options);
-  }
+	put(path: string, handler: Handler, options?: DecideLater): this {
+		return this.createRoute("PUT", path, handler, options);
+	}
 
-  delete(path: string, handler: Handler, options?: DecideLater): this {
-    return this.createRoute("DELETE", path, handler, options);
-  }
+	patch(path: string, handler: Handler, options?: DecideLater): this {
+		return this.createRoute("PATCH", path, handler, options);
+	}
 
-  custom(path: string, handler: Handler, options?: DecideLater): this {
-    return this.createRoute("CUSTOM", path, handler, options);
-  }
+	delete(path: string, handler: Handler, options?: DecideLater): this {
+		return this.createRoute("DELETE", path, handler, options);
+	}
 
-  group(router: Seasaw): this
-  group(path: string, router: Seasaw): this
-  group(pathOrRouter: string | Seasaw, maybeRouter?: Seasaw): this {
-    if (pathOrRouter instanceof Seasaw) {
-      this.routesStack.push(...pathOrRouter.routesStack.map((route) => ({
-        ...route,
-        path: `${pathOrRouter.options.prefix ?? ''}${route.path}`,
-      })));
-    } else if (pathOrRouter && maybeRouter){
-      this.routesStack.push(...maybeRouter.routesStack.map((route) => ({
-        ...route,
-        path: `${pathOrRouter}${maybeRouter.options.prefix ?? ''}${route.path}`,
-      })));
-    }
+	custom(path: string, handler: Handler, options?: DecideLater): this {
+		return this.createRoute("CUSTOM", path, handler, options);
+	}
 
-    return this;
-  }
+	group(router: Seasaw): this;
+	group(path: string, router: Seasaw): this;
+	group(pathOrRouter: string | Seasaw, maybeRouter?: Seasaw): this {
+		if (pathOrRouter instanceof Seasaw) {
+			this.routesStack.push(
+				...pathOrRouter.routesStack.map((route) => ({
+					...route,
+					path: `${pathOrRouter.options.prefix ?? ""}${route.path}`,
+				})),
+			);
+		} else if (pathOrRouter && maybeRouter) {
+			this.routesStack.push(
+				...maybeRouter.routesStack.map((route) => ({
+					...route,
+					path: `${pathOrRouter}${maybeRouter.options.prefix ?? ""}${route.path}`,
+				})),
+			);
+		}
 
-  private createRoute<T = unknown>(method: Method, path: string, handler: Handler, options?: DecideLater & { body?: (data: unknown) => T | type.errors }): this {
-    this.routesStack.push({
-      path,
-      method,
-      handler,
-      options,
-    });
+		return this;
+	}
 
-    return this;
-  }
+	use(middleware: Middleware<Context>): this {
+		this.middlewareStack.push(middleware);
+		return this;
+	}
 
-  *handleRequest(req: BunRequest): Operation<Response> {
-    const context = createContext(req);
+	*handleRequest(req: BunRequest): Operation<Response> {
+		const context = createContext(req);
 
-    try {
-      yield* this.runMiddleware(context);
-      return Response.json(true);
-    } catch (error) {
-      return Response.json({
-        error: "Internal error"
-      }, {
-        status: 500
-      });
-    }
-  }
+		try {
+			yield* this.runMiddleware(context);
+			return Response.json(true);
+		} catch (error) {
+			return Response.json(
+				{
+					error: "Internal error",
+				},
+				{
+					status: 500,
+				},
+			);
+		}
+	}
 
+	start(callback?: () => void) {
+		main(
+			function* (this: Seasaw) {
+				const scope = yield* useScope();
+				this.server = Bun.serve({
+					port: this.options.port,
+					routes: {
+						...this.mapStatic(),
+						...this.mapRoutes(scope),
+					},
+					fetch(req) {
+						return Response.json("Not Found", {
+							status: 404,
+						});
+					},
+				});
 
-  private *runMiddleware(context: Context): Operation<void> {
-    for (const middleware of this.middlewareStack) {
-      yield* spawn(function* () {
-        yield* middleware(context);
-      });
-    }
-  }
+				callback?.();
 
-  start(callback?: () => void) {
-    main(function* (this: Seasaw) {
-      const scope = yield* useScope();
-      this.server = Bun.serve({
-        port: this.options.port,
-        routes: this.routesStack.reduce((acc, curr) => {
-          const handler = curr.options?.body ? validator(curr.options.body, curr.handler) : curr.handler;
+				try {
+					yield* suspend();
+				} finally {
+					yield* until(this.server.stop());
+				}
+			}.bind(this),
+		);
+	}
 
-          acc[curr.path] = {
-            ...acc[curr.path],
-            [curr.method]: async (req: BunRequest): Promise<Response> => {
-              const data = await scope.run(function* () {
-                const result = handler(createContext(req));
-                if (result instanceof Response) {
-                  return result;
-                }
+	private createRoute<T = unknown>(
+		method: Method,
+		path: string,
+		handler: Handler,
+		options?: DecideLater & { body?: (data: unknown) => T | type.errors },
+	): this {
+		this.routesStack.push({
+			path,
+			method,
+			handler,
+			options,
+		});
 
-                return result instanceof Promise ? yield* until(result) : yield* result;
-              });
+		return this;
+	}
 
-              return data as unknown as Promise<Response>;
-            }
-          }
+	private *runMiddleware(context: Context): Operation<void> {
+		for (const middleware of this.middlewareStack) {
+			yield* spawn(function* () {
+				yield* middleware(context);
+			});
+		}
+	}
 
-          return acc;
-        }, {} as {
-          [path: string]: {
-            [method: string]: (req: BunRequest) => Promise<Response>
-          }
-        }),
-        fetch(req) {
-          return Response.json("Not Found", {
-            status: 404
-          });
-        }
-      });
+	private mapRoutes(scope: Scope) {
+		return this.routesStack.reduce(
+			(acc, curr) => {
+				const handler = curr.options?.body
+					? validator(curr.options.body, curr.handler)
+					: curr.handler;
 
-      callback?.();
+				acc[curr.path] = {
+					...acc[curr.path],
+					[curr.method]: async (req: BunRequest): Promise<Response> => {
+						const data = await scope.run(function* () {
+							const result = handler(createContext(req));
+							if (result instanceof Response) {
+								return result;
+							}
 
-      try {
-        yield* suspend();
-      } finally {
-        yield* until(this.server.stop());
-      }
-    }.bind(this));
-  }
+							return result instanceof Promise
+								? yield* until(result)
+								: yield* result;
+						});
+
+						return data as unknown as Promise<Response>;
+					},
+				};
+				return acc;
+			},
+			{} as {
+				[path: string]: {
+					[method: string]: ((req: BunRequest) => Promise<Response>);
+				};
+			},
+		);
+	}
+
+	private mapStatic() {
+		return this.staticStack.reduce(
+			(acc, curr) => {
+				acc[curr.path] = curr.response;
+				return acc;
+			},
+			{} as {
+				[path: string]: Response;
+			},
+		);
+	}	
 }
-

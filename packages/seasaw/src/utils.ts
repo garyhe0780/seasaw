@@ -27,4 +27,3 @@ export async function attempt<T, E = Error>(
 export function until<T>(promise: Promise<T>): Operation<T> {
 	return call(() => promise);
 }
-

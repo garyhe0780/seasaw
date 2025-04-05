@@ -1,25 +1,28 @@
 import { Seasaw, type Operation } from "seasaw"
-import { type } from "arktype";
+import Home from "./index.html"
 
 const app = new Seasaw({ 
   port: 3001
 });
 
 
-app.get("/", () => Response.json("Hello, 世界"))
+app.use(function* ({req}) {
+  const url = new URL(req.url)
 
-const authDTO = type({
-  email: "string.email",
-  password: "string",
+  console.log(url.pathname);
 });
 
 
-app.post("/auth/login", async ({ req, body, params }) => {
-  console.log(body);
-  return Response.json(true)
-}, {
-  body: authDTO
-})
+app.static("/plain", Response.json("Hello, 世界"))
+app.static("/html", Home)
+app.get("/", () => Response.json("Hello, 世界"))
+
+app.get("/generator", function* () {
+  return Response.json({
+    name: "gary",
+    age: 18,
+  })
+});
 
 function* handleUser(): Operation<Response> {
   return Response.json({
@@ -29,8 +32,6 @@ function* handleUser(): Operation<Response> {
 }
 
 app.get("/user", handleUser)
-
-
 
 app.start(() => {
   console.log(`App is running at ${app.server?.hostname}:${app.server?.port}`);
