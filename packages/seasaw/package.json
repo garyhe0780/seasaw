@@ -1,6 +1,6 @@
 {
 	"name": "seasaw",
-	"version": "0.1.20",
+	"version": "0.1.21",
 	"author": "Gary He <garyhe.05@gmail.com>",
 	"keywords": ["seasaw", "bun", "typescript", "effection", "arktype"],
 	"type": "module",
