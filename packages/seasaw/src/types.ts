@@ -15,7 +15,7 @@ export type Route<T = unknown> = {
 	path: string;
 	method: Method;
 	handler: Handler<T>;
-	options?: DecideLater;
+	options?: RouteHooks;
 };
 
 export type Handler<T = unknown> = (
@@ -38,6 +38,7 @@ export interface Options {
 	prefix?: string;
 }
 
-export interface DecideLater {
+export interface RouteHooks {
+	before?: Middleware;
 	body: (data: unknown) => any | type.errors;
 }

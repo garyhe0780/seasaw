@@ -1,5 +1,6 @@
-import { Seasaw, type Operation } from "seasaw"
+import { getParam, Seasaw, type Operation } from "seasaw"
 import Home from "./index.html"
+import { BunRequest } from "bun";
 
 const app = new Seasaw({ 
   port: 3001
@@ -16,6 +17,14 @@ app.use(function* ({req}) {
 app.static("/plain", Response.json("Hello, 世界"))
 app.static("/html", Home)
 app.get("/", () => Response.json("Hello, 世界"))
+app.get("/user/:id", ({ req }) => {
+  const id = getParam(req, "id")
+
+  return Response.json({
+    name: "gary",
+    age: 18,
+  })
+});
 
 app.get("/generator", function* () {
   return Response.json({

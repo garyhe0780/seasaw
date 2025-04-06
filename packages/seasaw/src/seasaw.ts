@@ -5,7 +5,7 @@ import type { type } from "arktype";
 import { createContext } from "./context";
 import type {
 	Context,
-	DecideLater,
+	RouteHooks,
 	Handler,
 	Method,
 	Middleware,
@@ -40,31 +40,31 @@ export class Seasaw {
 		return this;
 	}
 
-	get(path: string, handler: Handler, options?: DecideLater): this {
+	get(path: string, handler: Handler, options?: RouteHooks): this {
 		return this.createRoute("GET", path, handler, options);
 	}
 
-	post<T = unknown>(
+	post(
 		path: string,
 		handler: Handler,
-		options?: DecideLater & { body?: (data: unknown) => T | type.errors },
+		options?: RouteHooks,
 	): this {
-		return this.createRoute<T>("POST", path, handler, options);
+		return this.createRoute("POST", path, handler, options);
 	}
 
-	put(path: string, handler: Handler, options?: DecideLater): this {
+	put(path: string, handler: Handler, options?: RouteHooks): this {
 		return this.createRoute("PUT", path, handler, options);
 	}
 
-	patch(path: string, handler: Handler, options?: DecideLater): this {
+	patch(path: string, handler: Handler, options?: RouteHooks): this {
 		return this.createRoute("PATCH", path, handler, options);
 	}
 
-	delete(path: string, handler: Handler, options?: DecideLater): this {
+	delete(path: string, handler: Handler, options?: RouteHooks): this {
 		return this.createRoute("DELETE", path, handler, options);
 	}
 
-	custom(path: string, handler: Handler, options?: DecideLater): this {
+	custom(path: string, handler: Handler, options?: RouteHooks): this {
 		return this.createRoute("CUSTOM", path, handler, options);
 	}
 
@@ -120,8 +120,8 @@ export class Seasaw {
 				this.server = Bun.serve({
 					port: this.options.port,
 					routes: {
-						...this.mapStatic(),
-						...this.mapRoutes(scope),
+						...this.mapToStatic(),
+						...this.mapToRoutes(scope),
 					},
 					fetch(req) {
 						return Response.json("Not Found", {
@@ -141,11 +141,11 @@ export class Seasaw {
 		);
 	}
 
-	private createRoute<T = unknown>(
+	private createRoute(
 		method: Method,
 		path: string,
 		handler: Handler,
-		options?: DecideLater & { body?: (data: unknown) => T | type.errors },
+		options?: RouteHooks,
 	): this {
 		this.routesStack.push({
 			path,
@@ -165,7 +165,7 @@ export class Seasaw {
 		}
 	}
 
-	private mapRoutes(scope: Scope) {
+	private mapToRoutes(scope: Scope) {
 		return this.routesStack.reduce(
 			(acc, curr) => {
 				const handler = curr.options?.body
@@ -199,15 +199,13 @@ export class Seasaw {
 		);
 	}
 
-	private mapStatic() {
-		return this.staticStack.reduce(
+	private mapToStatic() {
+		return this.staticStack.reduce<Record<string, Response>>(
 			(acc, curr) => {
 				acc[curr.path] = curr.response;
 				return acc;
 			},
-			{} as {
-				[path: string]: Response;
-			},
+			{},
 		);
 	}	
 }

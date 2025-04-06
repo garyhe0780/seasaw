@@ -154,6 +154,6 @@ export function getQuery(request: BunRequest) {
  * const id = getParams(request, "id");
  * ```
  */
-export function getParam<K extends keyof BunRequest["params"]>(request: BunRequest, key: K): string {
-  return request.params[key];
+export function getParam(request: BunRequest, key: string): string | undefined {
+	return (request.params as { [key: string]: string })[key];
 }
